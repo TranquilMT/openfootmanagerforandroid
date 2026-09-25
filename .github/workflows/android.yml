@@ -46,14 +46,32 @@ jobs:
             npx tauri android init --ci
           fi
 
-      - name: Build ARM64 Android APK
+      - name: Build signed ARM64 debug APK
         env:
           NDK_HOME: ${{ env.ANDROID_NDK_HOME }}
-        run: npx tauri android build --apk --target aarch64
+        run: npx tauri android build --debug --apk --target aarch64
 
-      - name: Upload APK
+      - name: Verify APK signature and ARM64 payload
+        shell: bash
+        run: |
+          set -euo pipefail
+          APK="$(find src-tauri/gen/android/app/build/outputs/apk -type f -name '*.apk' | head -n 1)"
+          test -n "$APK"
+          echo "APK: $APK"
+          APKSIGNER="$(find "$ANDROID_HOME/build-tools" -type f -name apksigner | sort -V | tail -n 1)"
+          "$APKSIGNER" verify --verbose "$APK"
+          unzip -l "$APK" | grep -E 'lib/arm64-v8a/.*\.so' >/dev/null
+          if unzip -l "$APK" | grep -E 'lib/(armeabi-v7a|x86|x86_64)/.*\.so'; then
+            echo 'Unexpected non-ARM64 native libraries found'
+            exit 1
+          fi
+          mkdir -p dist-apk
+          cp "$APK" dist-apk/OpenFootManager-ARM64.apk
+          sha256sum dist-apk/OpenFootManager-ARM64.apk | tee dist-apk/OpenFootManager-ARM64.apk.sha256
+
+      - name: Upload installable ARM64 APK
         uses: actions/upload-artifact@v4
         with:
-          name: openfoot-manager-android-arm64
-          path: src-tauri/gen/android/app/build/outputs/apk/**/*.apk
+          name: openfoot-manager-android-arm64-installable
+          path: dist-apk/*
           if-no-files-found: error
