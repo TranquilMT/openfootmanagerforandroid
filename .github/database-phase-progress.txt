@@ -1,1 +1,1 @@
-Real database pipeline: performance-derived real player ratings + generated/newgen separation + validation gate. OpenFootball 2026/27 sources confirmed CC0; source normalization/population is next.
+Real database pipeline: performance-derived real player ratings + generated/newgen separation + validation gate. OpenFootball 2026/27 sources confirmed CC0; source normalization/population is next. This checkpoint is intended to move android/phase-1-bootstrap after the multi-file commits.
