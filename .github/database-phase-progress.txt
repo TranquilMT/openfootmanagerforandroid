@@ -1,1 +1,1 @@
-Real database pipeline: performance-derived real player ratings + generated/newgen separation + validation gate.
+Real database pipeline: performance-derived real player ratings + generated/newgen separation + validation gate. OpenFootball 2026/27 sources confirmed CC0; source normalization/population is next.
