@@ -1,1 +1,1 @@
-Real database pipeline ready for branch: performance-derived real player ratings; generated/newgen separation; validation gate; CC0 2026/27 source verification.
+Real database pipeline ready for branch update.
