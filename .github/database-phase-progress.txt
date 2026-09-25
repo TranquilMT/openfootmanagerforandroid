@@ -1,0 +1,1 @@
+Real database pipeline: performance-derived real player ratings + generated/newgen separation + validation gate.
