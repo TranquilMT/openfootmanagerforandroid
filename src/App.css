@@ -34,6 +34,7 @@
   button, input, select, textarea { font: inherit; }
   button, [role="button"], a, select { touch-action: manipulation; }
   button, [role="button"], input, select, textarea { min-height: 44px; }
+  textarea { resize: vertical; }
   h1, h2, h3, h4, h5, h6 { font-family: var(--font-heading); }
 }
 
@@ -66,20 +67,25 @@ input[type="number"] { -moz-appearance: textfield; }
   [class*="max-w-"] { max-width: 100%; }
   [class*="min-w-"] { min-width: 0; }
   [class*="w-screen"] { width: 100%; }
+  [class*="h-screen"] { height: 100dvh; }
   table { font-size: .82rem; }
   th, td { padding-left: .45rem !important; padding-right: .45rem !important; }
   .overflow-x-auto, [class*="overflow-x-scroll"] { -webkit-overflow-scrolling: touch; max-width: 100%; overscroll-behavior-x: contain; }
   dialog, [role="dialog"] { width: min(100% - 1rem, 48rem); max-width: calc(100vw - 1rem) !important; max-height: calc(100svh - 1rem) !important; overflow: auto; }
   [title] { -webkit-touch-callout: none; }
+  nav, [role="tablist"] { overscroll-behavior-x: contain; -webkit-overflow-scrolling: touch; }
+  [role="tab"] { flex: 0 0 auto; min-height: 44px; }
+  [class*="truncate"] { max-width: 100%; }
 }
 
 @media (max-width: 900px) {
-  [class*="grid-cols-4"], [class*="grid-cols-5"], [class*="grid-cols-6"], [class*="grid-cols-7"], [class*="grid-cols-8"] { grid-template-columns: repeat(2, minmax(0, 1fr)) !important; }
+  [class*="grid-cols-4"], [class*="grid-cols-5"], [class*="grid-cols-6"], [class*="grid-cols-7"], [class*="grid-cols-8"], [class*="grid-cols-9"], [class*="grid-cols-10"], [class*="grid-cols-11"], [class*="grid-cols-12"] { grid-template-columns: repeat(2, minmax(0, 1fr)) !important; }
   [class*="gap-8"] { gap: 1rem !important; }
   [class*="gap-6"] { gap: .85rem !important; }
   [class*="p-8"] { padding: 1rem !important; }
   [class*="px-8"] { padding-left: 1rem !important; padding-right: 1rem !important; }
   [class*="py-8"] { padding-top: 1rem !important; padding-bottom: 1rem !important; }
+  [class*="w-96"], [class*="w-80"], [class*="w-72"], [class*="w-64"] { max-width: min(100%, 22rem) !important; }
 }
 
 @media (max-width: 600px) {
@@ -88,13 +94,15 @@ input[type="number"] { -moz-appearance: textfield; }
   h2 { font-size: clamp(1.2rem, 5vw, 1.65rem) !important; }
   h3 { font-size: clamp(1.05rem, 4.5vw, 1.4rem) !important; }
   p, td, th, button, label { overflow-wrap: anywhere; }
-  [class*="grid-cols-2"], [class*="grid-cols-3"], [class*="grid-cols-4"], [class*="grid-cols-5"], [class*="grid-cols-6"], [class*="grid-cols-7"], [class*="grid-cols-8"] { grid-template-columns: minmax(0, 1fr) !important; }
+  [class*="grid-cols-2"], [class*="grid-cols-3"], [class*="grid-cols-4"], [class*="grid-cols-5"], [class*="grid-cols-6"], [class*="grid-cols-7"], [class*="grid-cols-8"], [class*="grid-cols-9"], [class*="grid-cols-10"], [class*="grid-cols-11"], [class*="grid-cols-12"] { grid-template-columns: minmax(0, 1fr) !important; }
   [class*="p-6"] { padding: .85rem !important; }
   [class*="px-6"] { padding-left: .85rem !important; padding-right: .85rem !important; }
   [class*="py-6"] { padding-top: .85rem !important; padding-bottom: .85rem !important; }
   [class*="space-x-6"] > :not(:last-child) { margin-right: .75rem !important; }
+  [class*="w-96"], [class*="w-80"], [class*="w-72"], [class*="w-64"] { width: 100% !important; max-width: 100% !important; }
   table { font-size: .78rem; }
   th, td { padding: .4rem !important; }
+  nav button, nav a, [role="tab"] { white-space: nowrap; }
 }
 
 /* Short landscape phones: preserve content and reduce vertical chrome rather than scaling the whole game. */
@@ -109,10 +117,12 @@ input[type="number"] { -moz-appearance: textfield; }
   dialog, [role="dialog"] { max-height: calc(100dvh - .5rem) !important; }
 }
 
-/* Avoid desktop hover-only affordances on touch Android devices. */
+/* Touch Android must never depend on mouse hover or precision-pointer behaviour. */
 @media (hover: none) and (pointer: coarse) {
-  [class*="hover:"] { -webkit-tap-highlight-color: transparent; }
-  button, [role="button"], a { cursor: default; }
+  button, [role="button"], a { cursor: default; user-select: none; -webkit-user-select: none; }
+  input, textarea { user-select: text; -webkit-user-select: text; }
+  [draggable="true"] { touch-action: none; }
+  :focus-visible { outline: 2px solid var(--color-primary-400); outline-offset: 2px; }
 }
 
 @keyframes fade-slide-in { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: translateY(0); } }
