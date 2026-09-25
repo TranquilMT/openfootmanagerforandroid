@@ -1,8 +1,8 @@
 {
   "$schema": "https://schema.tauri.app/config/2",
-  "productName": "Openfoot Manager",
+  "productName": "Openfoot Manager Android",
   "version": "0.3.0",
-  "identifier": "com.sturdyrobot.openfootmanager",
+  "identifier": "com.tranquilmt.openfootmanager",
   "build": {
     "beforeDevCommand": "npm run dev",
     "devUrl": "http://localhost:1420",
@@ -12,10 +12,10 @@
   "app": {
     "windows": [
       {
-        "title": "Openfoot Manager",
+        "title": "Openfoot Manager Android",
         "width": 1280,
         "height": 800,
-        "minWidth": 960,
+        "minWidth": 360,
         "minHeight": 640,
         "dragDropEnabled": false
       }
