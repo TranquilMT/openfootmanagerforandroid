@@ -1,0 +1,62 @@
+name: Refresh 2026-27 Database Snapshot
+
+on:
+  workflow_dispatch:
+
+concurrency:
+  group: openfoot-database-refresh
+  cancel-in-progress: false
+
+jobs:
+  refresh-database:
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    permissions:
+      contents: read
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Generate 2026/27 real-player database snapshot
+        run: node scripts/build-2026-27-real-database.mjs
+
+      - name: Validate generated snapshot
+        run: |
+          set -euo pipefail
+          DB="src-tauri/databases/openfootball-2026-27.json"
+          test -s "$DB"
+          node scripts/validate-real-database.mjs "$DB"
+          node - "$DB" <<'NODE'
+          const fs = require('fs');
+          const db = JSON.parse(fs.readFileSync(process.argv[2], 'utf8'));
+          const players = Array.isArray(db.players) ? db.players.length : 0;
+          const teams = Array.isArray(db.teams) ? db.teams.length : 0;
+          console.log(`Generated snapshot: ${teams} teams, ${players} players`);
+          if (players < 12000) throw new Error(`Player count too low: ${players}`);
+          if (teams < 800) throw new Error(`Team count too low: ${teams}`);
+          NODE
+
+      - name: Create snapshot manifest
+        run: |
+          sha256sum src-tauri/databases/openfootball-2026-27.json > src-tauri/databases/openfootball-2026-27.json.sha256
+          wc -c src-tauri/databases/openfootball-2026-27.json
+          cat src-tauri/databases/openfootball-2026-27.json.sha256
+
+      - name: Upload database snapshot immediately
+        uses: actions/upload-artifact@v4
+        with:
+          name: OpenFootManager-2026-27-Database-Snapshot
+          path: |
+            src-tauri/databases/openfootball-2026-27.json
+            src-tauri/databases/openfootball-2026-27.json.sha256
+          if-no-files-found: error
+          retention-days: 30
