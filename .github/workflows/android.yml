@@ -6,6 +6,10 @@ on:
     branches:
       - android/phase-1-bootstrap
 
+concurrency:
+  group: android-nightly-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
   build-android:
     runs-on: ubuntu-latest
@@ -34,11 +38,12 @@ jobs:
       - name: Install frontend dependencies
         run: npm ci
 
-      - name: Validate bundled 2026/27 real-player database
+      - name: Require and validate committed 2026/27 database snapshot
         run: |
           set -euo pipefail
           DB="src-tauri/databases/openfootball-2026-27.json"
-          test -s "$DB" || { echo 'Bundled 2026/27 database is missing or empty'; exit 1; }
+          test -s "$DB" || { echo 'ERROR: committed 2026/27 database snapshot is missing or empty'; exit 1; }
+          git ls-files --error-unmatch "$DB" >/dev/null || { echo 'ERROR: database exists in workspace but is not tracked by Git'; exit 1; }
           node scripts/validate-real-database.mjs "$DB"
           node - "$DB" <<'NODE'
           const fs = require('fs');
@@ -47,7 +52,7 @@ jobs:
           const teams = Array.isArray(db.teams) ? db.teams.length : 0;
           const nationalTeams = Array.isArray(db.national_teams) ? db.national_teams.length :
             (Array.isArray(db.nationalTeams) ? db.nationalTeams.length : 0);
-          console.log(`Bundled database: ${teams} teams, ${players} players, ${nationalTeams} national teams`);
+          console.log(`Committed database: ${teams} teams, ${players} players, ${nationalTeams} national teams`);
           if (players < 12000) throw new Error(`Player count too low: ${players}`);
           if (teams < 800) throw new Error(`Team count too low: ${teams}`);
           NODE
