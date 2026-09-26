@@ -34,11 +34,23 @@ jobs:
       - name: Install frontend dependencies
         run: npm ci
 
-      - name: Build 2026/27 real-player database
+      - name: Validate bundled 2026/27 real-player database
         run: |
-          node scripts/build-2026-27-real-database.mjs
-          node scripts/validate-real-database.mjs src-tauri/databases/openfootball-2026-27.json
-          test -s src-tauri/databases/openfootball-2026-27.json
+          set -euo pipefail
+          DB="src-tauri/databases/openfootball-2026-27.json"
+          test -s "$DB" || { echo 'Bundled 2026/27 database is missing or empty'; exit 1; }
+          node scripts/validate-real-database.mjs "$DB"
+          node - "$DB" <<'NODE'
+          const fs = require('fs');
+          const db = JSON.parse(fs.readFileSync(process.argv[2], 'utf8'));
+          const players = Array.isArray(db.players) ? db.players.length : 0;
+          const teams = Array.isArray(db.teams) ? db.teams.length : 0;
+          const nationalTeams = Array.isArray(db.national_teams) ? db.national_teams.length :
+            (Array.isArray(db.nationalTeams) ? db.nationalTeams.length : 0);
+          console.log(`Bundled database: ${teams} teams, ${players} players, ${nationalTeams} national teams`);
+          if (players < 12000) throw new Error(`Player count too low: ${players}`);
+          if (teams < 800) throw new Error(`Team count too low: ${teams}`);
+          NODE
 
       - name: Install Tauri CLI
         run: npm install --global @tauri-apps/cli@^2
