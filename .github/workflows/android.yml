@@ -34,10 +34,18 @@ jobs:
       - name: Install frontend dependencies
         run: npm ci
 
+      - name: Build 2026/27 real-player database
+        run: |
+          node scripts/build-2026-27-real-database.mjs
+          node scripts/validate-real-database.mjs src-tauri/databases/openfootball-2026-27.json
+          test -s src-tauri/databases/openfootball-2026-27.json
+
       - name: Install Tauri CLI
         run: npm install --global @tauri-apps/cli@^2
 
       - name: Frontend build
+        env:
+          VITE_APP_BUILD_NUMBER: ${{ github.run_number }}
         run: npm run build
 
       - name: Initialize Android project if needed
@@ -49,9 +57,10 @@ jobs:
       - name: Build signed ARM64 debug APK
         env:
           NDK_HOME: ${{ env.ANDROID_NDK_HOME }}
+          VITE_APP_BUILD_NUMBER: ${{ github.run_number }}
         run: npx tauri android build --debug --apk --target aarch64
 
-      - name: Verify APK signature and ARM64 payload
+      - name: Verify APK signature, ARM64 payload and bundled database
         shell: bash
         run: |
           set -euo pipefail
@@ -65,13 +74,17 @@ jobs:
             echo 'Unexpected non-ARM64 native libraries found'
             exit 1
           fi
+          unzip -l "$APK" | grep -F 'openfootball-2026-27.json' >/dev/null || {
+            echo '2026/27 database is missing from APK'
+            exit 1
+          }
           mkdir -p dist-apk
-          cp "$APK" dist-apk/OpenFootManager-ARM64.apk
-          sha256sum dist-apk/OpenFootManager-ARM64.apk | tee dist-apk/OpenFootManager-ARM64.apk.sha256
+          cp "$APK" "dist-apk/OpenFootManagerAndroid-Build${GITHUB_RUN_NUMBER}-Nightly.apk"
+          sha256sum "dist-apk/OpenFootManagerAndroid-Build${GITHUB_RUN_NUMBER}-Nightly.apk" | tee "dist-apk/OpenFootManagerAndroid-Build${GITHUB_RUN_NUMBER}-Nightly.apk.sha256"
 
       - name: Upload installable ARM64 APK
         uses: actions/upload-artifact@v4
         with:
-          name: openfoot-manager-android-arm64-installable
+          name: OpenFootManagerAndroid-Build${{ github.run_number }}-Nightly
           path: dist-apk/*
           if-no-files-found: error
